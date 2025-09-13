@@ -109,7 +109,7 @@ init_db()
 
 # Pydantic models
 class KeywordRequest(BaseModel):
-    seed_keyword: str
+    seed_keywords: List[str]
     language: str = "en"
     country: str = "US"
     limit: int = 20
@@ -603,55 +603,49 @@ async def root():
 
 @app.post("/api/keywords")
 async def get_keywords(request: KeywordRequest):
-    """Fetch keyword suggestions for a seed keyword"""
+    """Fetch keyword suggestions for multiple seed keywords"""
     try:
-        # Check cache first
-        conn = sqlite3.connect('seo_blog_cache.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT keywords_json FROM keyword_cache 
-            WHERE seed_keyword = ? AND timestamp > datetime('now', '-1 day')
-            ORDER BY timestamp DESC LIMIT 1
-        ''', (request.seed_keyword,))
-        
-        cached = cursor.fetchone()
-        if cached:
-            keywords = json.loads(cached[0])
-            conn.close()
-            return {
-                "seed_keyword": request.seed_keyword,
-                "keywords": keywords,
-                "source": "cache",
-                "count": len(keywords)
-            }
-        
-        # Fetch fresh keywords
         google_api = GoogleSuggestAPI()
-        keywords = await google_api.get_suggestions(request.seed_keyword, request.language)
-        
-        # Limit results
-        keywords = keywords[:request.limit]
-        
-        # Cache results
-        cursor.execute('''
-            INSERT INTO keyword_cache (seed_keyword, keywords_json, source)
-            VALUES (?, ?, ?)
-        ''', (request.seed_keyword, json.dumps(keywords), "google_suggest"))
-        
-        conn.commit()
-        conn.close()
-        
+        all_keywords = []
+
+        for seed in request.seed_keywords:
+            # --- check cache ---
+            conn = sqlite3.connect('seo_blog_cache.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT keywords_json FROM keyword_cache 
+                WHERE seed_keyword = ? AND timestamp > datetime('now', '-1 day')
+                ORDER BY timestamp DESC LIMIT 1
+            ''', (seed,))
+            cached = cursor.fetchone()
+            if cached:
+                keywords = json.loads(cached[0])
+            else:
+                keywords = await google_api.get_suggestions(seed, request.language)
+                keywords = keywords[:request.limit]
+                cursor.execute('''
+                    INSERT INTO keyword_cache (seed_keyword, keywords_json, source)
+                    VALUES (?, ?, ?)
+                ''', (seed, json.dumps(keywords), "google_suggest"))
+                conn.commit()
+            conn.close()
+
+            all_keywords.extend(keywords)
+
+        # Deduplicate across all seed keywords
+        unique_keywords = list(dict.fromkeys(all_keywords))
+
         return {
-            "seed_keyword": request.seed_keyword,
-            "keywords": keywords,
-            "source": "fresh",
-            "count": len(keywords)
+            "seed_keywords": request.seed_keywords,
+            "keywords": unique_keywords,
+            "count": len(unique_keywords),
+            "source": "mixed"
         }
-        
+
     except Exception as e:
         logger.error(f"Error fetching keywords: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching keywords: {str(e)}")
+
 
 @app.post("/api/blog-topics")
 async def generate_blog_topics(request: BlogTopicRequest):
