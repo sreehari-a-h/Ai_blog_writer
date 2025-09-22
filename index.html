@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Blog Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border: 1px solid #e0e6ed;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        .keywords-input {
+            position: relative;
+        }
+
+        .keyword-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            min-height: 40px;
+            padding: 10px;
+            border: 2px dashed #e0e6ed;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .keyword-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+        }
+
+        .keyword-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .keyword-tag button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e6ed;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e0e6ed;
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px 30px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .results-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e6ed;
+            font-size: 1.2rem;
+        }
+
+        .meta-info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .meta-info div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .meta-info div:last-child {
+            margin-bottom: 0;
+        }
+
+        .content-preview {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .keywords-used {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .keyword-used {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .error {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #c62828;
+            margin-top: 20px;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e6ed;
+            text-align: center;
+        }
+
+        .info-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SEO Blog Generator</h1>
+            <p>Transform your keywords into high-quality, SEO-optimized blog content</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="info-cards">
+                <div class="info-card">
+                    <h4>📝 Keyword Input</h4>
+                    <p>Enter your target keywords separated by commas or line breaks</p>
+                </div>
+                <div class="info-card">
+                    <h4>🎯 Smart Clustering</h4>
+                    <p>AI automatically groups related keywords into coherent topics</p>
+                </div>
+                <div class="info-card">
+                    <h4>✨ Content Generation</h4>
+                    <p>Creates comprehensive, SEO-optimized blog posts with proper structure</p>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <form id="blogForm">
+                    <div class="form-group">
+                        <label for="keywords">Target Keywords</label>
+                        <textarea 
+                            id="keywords" 
+                            placeholder="Enter keywords separated by commas or line breaks (e.g., best laptops, laptop reviews, gaming laptops, budget laptops)"
+                            required
+                        ></textarea>
+                        <div class="keyword-tags" id="keywordTags"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label for="audience">Target Audience</label>
+                            <select id="audience">
+                                <option value="general">General Audience</option>
+                                <option value="beginners">Beginners</option>
+                                <option value="professionals">Professionals</option>
+                                <option value="students">Students</option>
+                                <option value="experts">Experts</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tone">Content Tone</label>
+                            <select id="tone">
+                                <option value="professional">Professional</option>
+                                <option value="casual">Casual</option>
+                                <option value="authoritative">Authoritative</option>
+                                <option value="friendly">Friendly</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label for="wordCount">Word Count</label>
+                            <select id="wordCount">
+                                <option value="800">Short (800 words)</option>
+                                <option value="1200" selected>Medium (1200 words)</option>
+                                <option value="2000">Long (2000 words)</option>
+                                <option value="2500">Extended (2500 words)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contentType">Content Type</label>
+                            <select id="contentType">
+                                <option value="informational">Informational Guide</option>
+                                <option value="howto">How-to Tutorial</option>
+                                <option value="comparison">Comparison/Review</option>
+                                <option value="listicle">List Article</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="submit" class="btn">Generate SEO Blog Content</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <h3>Generating Your SEO Blog Content...</h3>
+                <p>This may take a few minutes. We're analyzing keywords, creating outlines, and writing quality content.</p>
+            </div>
+
+            <div class="error" id="error">
+                <h4>Error Generating Content</h4>
+                <p id="errorMessage">Something went wrong. Please try again.</p>
+            </div>
+
+            <div class="results" id="results">
+                <div class="results-header">
+                    <div>✅ Blog Content Generated Successfully</div>
+                </div>
+                <div class="results-content">
+                    <div class="section">
+                        <div class="meta-info" id="metaInfo">
+                            <!-- Meta information will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>🎯 Target Keywords Used</h3>
+                        <div class="keywords-used" id="keywordsUsed"></div>
+                    </div>
+
+                    <div class="section">
+                        <h3>📄 Generated Content Preview</h3>
+                        <div class="content-preview" id="contentPreview"></div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="btn" onclick="copyContent()">📋 Copy Full Content</button>
+                        <button class="btn" onclick="downloadContent()" style="margin-left: 15px;">💾 Download as Text</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let keywords = [];
+        let generatedContent = '';
+
+        // Handle keyword input
+        document.getElementById('keywords').addEventListener('input', function(e) {
+            const input = e.target.value;
+            const newKeywords = input.split(/[,\n]+/).map(k => k.trim()).filter(k => k.length > 0);
+            updateKeywordTags(newKeywords);
+        });
+
+        function updateKeywordTags(newKeywords) {
+            keywords = [...new Set(newKeywords)]; // Remove duplicates
+            const tagsContainer = document.getElementById('keywordTags');
+            tagsContainer.innerHTML = '';
+            
+            keywords.forEach((keyword, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'keyword-tag';
+                tag.innerHTML = `
+                    ${keyword}
+                    <button type="button" onclick="removeKeyword(${index})">×</button>
+                `;
+                tagsContainer.appendChild(tag);
+            });
+        }
+
+        function removeKeyword(index) {
+            keywords.splice(index, 1);
+            document.getElementById('keywords').value = keywords.join(', ');
+            updateKeywordTags(keywords);
+        }
+
+        // Handle form submission
+        document.getElementById('blogForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (keywords.length === 0) {
+                showError('Please enter at least one keyword.');
+                return;
+            }
+
+            showLoading();
+            hideError();
+            hideResults();
+
+            try {
+                // Simulate API call - replace with actual API endpoint
+                const formData = {
+                    keywords: keywords,
+                    audience: document.getElementById('audience').value,
+                    tone: document.getElementById('tone').value,
+                    wordCount: parseInt(document.getElementById('wordCount').value),
+                    contentType: document.getElementById('contentType').value
+                };
+
+                // This would be your actual enhanced API call
+                // const response = await fetch('/api/enhanced-complete-workflow', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({
+                //         keywords: formData.keywords,
+                //         audience: formData.audience,
+                //         tone: formData.tone,
+                //         word_count: formData.wordCount
+                //     })
+                // });
+                
+                // Simulate API response with mock data
+                await simulateContentGeneration(formData);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to generate content. Please check your API configuration and try again.');
+            }
+        });
+
+        async function simulateContentGeneration(formData) {
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            const mockContent = generateMockContent(formData);
+            displayResults(mockContent);
+        }
+
+        function generateMockContent(formData) {
+            const primaryKeyword = formData.keywords[0];
+            const title = `Complete Guide to ${primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1)} - Everything You Need to Know`;
+            
+            const content = `# ${title}
+
+## Introduction
+
+${primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1)} is becoming increasingly important in today's digital landscape. Whether you're a ${formData.audience === 'beginners' ? 'beginner' : formData.audience.slice(0, -1)} looking to understand the basics or someone seeking advanced insights, this comprehensive guide will provide you with everything you need to know about ${primaryKeyword}.
+
+## What is ${primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1)}?
+
+${primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1)} refers to the practice and strategies involved in optimizing and improving your approach to this particular topic. Understanding the fundamentals is crucial for success.
+
+### Key Benefits
+
+- **Improved Efficiency**: Streamline your processes and achieve better results
+- **Cost-Effective Solutions**: Maximize your ROI with proven strategies
+- **Future-Proof Approach**: Stay ahead of industry trends and changes
+- **Scalable Implementation**: Grow your efforts without compromising quality
+
+## Types of ${primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1)}
+
+There are several approaches you can take when it comes to ${primaryKeyword}:
+
+### 1. Traditional Methods
+Classic approaches that have proven effective over time. These methods focus on foundational principles and time-tested strategies.
+
+### 2. Modern Techniques
+Contemporary approaches that leverage new technologies and methodologies. These are particularly effective for ${formData.audience} who want to stay current.
+
+### 3. Hybrid Approaches
+Combining traditional and modern methods for optimal results. This balanced approach works well across different scenarios.
+
+## How to Get Started
+
+Getting started with ${primaryKeyword} doesn't have to be overwhelming. Follow these steps:
+
+1. **Assessment**: Evaluate your current situation and goals
+2. **Planning**: Develop a strategy tailored to your needs
+3. **Implementation**: Execute your plan with careful attention to detail
+4. **Monitoring**: Track progress and make adjustments as needed
+5. **Optimization**: Continuously improve based on results and feedback
+
+## Best Practices
+
+To maximize your success with ${primaryKeyword}, consider these proven practices:
+
+- **Research Thoroughly**: Understand your target audience and market
+- **Set Clear Goals**: Define measurable objectives and timelines
+- **Test and Iterate**: Continuously experiment and refine your approach
+- **Stay Updated**: Keep up with industry trends and best practices
+- **Measure Results**: Use data to guide your decisions and improvements
+
+## Common Mistakes to Avoid
+
+Avoid these pitfalls that can hinder your ${primaryKeyword} efforts:
+
+- Rushing the planning phase
+- Ignoring your target audience
+- Failing to measure and track results
+- Not staying updated with industry changes
+- Overlooking the importance of quality over quantity
+
+## Frequently Asked Questions
+
+### What is the best approach to ${primaryKeyword}?
+The best approach depends on your specific goals, audience, and resources. Generally, a balanced strategy that combines proven methods with innovative techniques works well.
+
+### How long does it take to see results?
+Results can vary depending on your approach and goals. Typically, you can expect to see initial improvements within the first few weeks, with more significant results over several months.
+
+### What tools do I need to get started?
+While you can start with basic tools, investing in quality resources and platforms can significantly improve your results and efficiency.
+
+### How much should I budget for ${primaryKeyword}?
+Budgets can vary widely based on your goals and approach. Start with a modest budget and scale up as you see positive results.
+
+### Can I do this myself or do I need professional help?
+While it's possible to handle ${primaryKeyword} yourself, professional guidance can accelerate your progress and help you avoid common mistakes.
+
+## Conclusion
+
+${primaryKeyword.charAt(0).toUpperCase() + primaryKeyword.slice(1)} offers tremendous opportunities for those willing to invest the time and effort to learn and implement effective strategies. By following the guidelines and best practices outlined in this guide, you'll be well-positioned to achieve your goals and see meaningful results.
+
+Remember that success with ${primaryKeyword} is a journey, not a destination. Stay committed to continuous learning and improvement, and you'll continue to see growth and success over time.
+
+Ready to get started with ${primaryKeyword}? Begin implementing these strategies today and take your first step toward achieving your goals!`;
+
+            return {
+                title: title,
+                meta_title: title.length > 60 ? title.substring(0, 57) + "..." : title,
+                meta_description: `Learn everything about ${primaryKeyword} with our comprehensive guide. Tips, strategies, and best practices for ${formData.audience}.`,
+                content: content,
+                word_count: content.split(' ').length,
+                target_keywords: formData.keywords.slice(0, 8),
+                headings_count: content.split('#').length - 1,
+                generated_at: new Date().toISOString()
+            };
+        }
+
+        function displayResults(data) {
+            hideLoading();
+            
+            // Update meta info
+            document.getElementById('metaInfo').innerHTML = `
+                <div><strong>Title:</strong> <span>${data.meta_title}</span></div>
+                <div><strong>Meta Description:</strong> <span>${data.meta_description}</span></div>
+                <div><strong>Word Count:</strong> <span>${data.word_count} words</span></div>
+                <div><strong>Headings:</strong> <span>${data.headings_count} sections</span></div>
+                <div><strong>Generated:</strong> <span>${new Date(data.generated_at).toLocaleString()}</span></div>
+            `;
+
+            // Update keywords used
+            const keywordsContainer = document.getElementById('keywordsUsed');
+            keywordsContainer.innerHTML = '';
+            data.target_keywords.forEach(keyword => {
+                const span = document.createElement('span');
+                span.className = 'keyword-used';
+                span.textContent = keyword;
+                keywordsContainer.appendChild(span);
+            });
+
+            // Update content preview
+            document.getElementById('contentPreview').innerHTML = `
+                <div style="white-space: pre-wrap; font-family: inherit;">${data.content}</div>
+            `;
+
+            generatedContent = data.content;
+            showResults();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showResults() {
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function hideResults() {
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function copyContent() {
+            navigator.clipboard.writeText(generatedContent).then(() => {
+                alert('Content copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = generatedContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Content copied to clipboard!');
+            });
+        }
+
+        function downloadContent() {
+            const blob = new Blob([generatedContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'seo-blog-content.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize with sample keywords
+        const sampleKeywords = ['best laptops 2024', 'gaming laptops', 'budget laptops', 'laptop reviews'];
+        document.getElementById('keywords').value = sampleKeywords.join(', ');
+        updateKeywordTags(sampleKeywords);
+    </script>
+</body>
+</html>

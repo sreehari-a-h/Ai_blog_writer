@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Preview - SEO Blog Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .blog-content { 
+            line-height: 1.8; 
+            font-size: 16px; 
+        }
+        .blog-content h1 { color: #2c3e50; margin-bottom: 1rem; }
+        .blog-content h2 { color: #34495e; margin: 2rem 0 1rem 0; }
+        .blog-content h3 { color: #7f8c8d; margin: 1.5rem 0 0.8rem 0; }
+        .blog-content blockquote {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .copy-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Blog Statistics -->
+                <div class="card stats-card mb-4">
+                    <div class="card-body text-center">
+                        <h5>Blog Statistics</h5>
+                        <hr class="bg-white">
+                        <div class="row">
+                            <div class="col-6">
+                                <h3>{{ blog_data.word_count }}</h3>
+                                <small>Words</small>
+                            </div>
+                            <div class="col-6">
+                                <h3>{{ analysis.seo_score.overall_score }}/100</h3>
+                                <small>SEO Score</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEO Metadata -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6><i class="fas fa-search"></i> SEO Metadata</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Meta Title:</label>
+                            <p class="small">{{ blog_data.metadata.meta_title }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Meta Description:</label>
+                            <p class="small">{{ blog_data.metadata.meta_description }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Focus Keyword:</label>
+                            <p class="small">{{ blog_data.metadata.focus_keyphrase }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-body">
+                        <button class="btn btn-success btn-block mb-2" onclick="copyBlog()">
+                            <i class="fas fa-copy"></i> Copy Content
+                        </button>
+                        <a href="/download/{{ filename }}" class="btn btn-primary btn-block mb-2">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <a href="/" class="btn btn-secondary btn-block">
+                            <i class="fas fa-arrow-left"></i> Back to Generator
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <!-- Blog Content -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-file-alt"></i> Generated Blog Content</h5>
+                        <small class="text-muted">Generated: {{ blog_data.generated_at }}</small>
+                    </div>
+                    <div class="card-body blog-content">
+                        {{ html_content|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Button -->
+    <button class="btn btn-success copy-button" onclick="copyBlog()">
+        <i class="fas fa-copy"></i>
+    </button>
+
+    <script>
+        function copyBlog() {
+            const blogContent = `{{ blog_data.content|replace('
+', '\n')|replace('', '')|replace('"', '\"') }}`;
+            
+            navigator.clipboard.writeText(blogContent).then(() => {
+                // Show success feedback
+                const btn = document.querySelector('.copy-button');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                }, 2000);
+                
+                alert('Blog content copied to clipboard!');
+            }).catch(() => {
+                alert('Copy failed. Please use the download option instead.');
+            });
+        }
+    </script>
+</body>
+</html>
