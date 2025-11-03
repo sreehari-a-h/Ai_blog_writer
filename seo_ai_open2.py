@@ -27,6 +27,9 @@ import logging
 import os
 from openai import OpenAI
 import random
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +48,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+print("HF_TOKEN:", os.getenv("HF_TOKEN"))
 
 # Global configurations
 SENTENCE_TRANSFORMER_MODEL = "all-MiniLM-L6-v2"
@@ -150,11 +155,12 @@ init_enhanced_db()
 
 class EnhancedAIBlogWriter:
     """Enhanced AI blog writer with dynamic content generation and styling"""
-
+    
     def __init__(self):
         self.client = OpenAI(
-            base_url="https://router.huggingface.co/v1",    
-            api_key=os.getenv("HF_TOKEN")
+            base_url="https://router.huggingface.co/v1",
+            api_key=os.getenv("HF_TOKEN"),
+            default_headers={"x-hf-bill-to": os.getenv("ORG_NAME")}
         )
         
         # Content variation templates
@@ -255,7 +261,7 @@ Return a JSON structure with:
         try:
             response = await asyncio.to_thread(
                 self.client.chat.completions.create,
-                model="Qwen/Qwen3-Next-80B-A3B-Instruct:novita",
+                model="Qwen/Qwen3-Next-80B-A3B-Instruct",
                 messages=[
                     {"role": "system", "content": "You are an expert SEO content strategist and outline creator. Return only valid JSON."},
                     {"role": "user", "content": outline_prompt}
@@ -318,7 +324,7 @@ Include FAQ section if requested: {request.include_faqs}
         try:
             response = await asyncio.to_thread(
                 self.client.chat.completions.create,
-                model="Qwen/Qwen3-Next-80B-A3B-Instruct:novita",
+                model="Qwen/Qwen3-Next-80B-A3B-Instruct",
                 messages=[
                     {"role": "system", "content": f"You are an expert {request.tone} blog writer specializing in {request.audience} content. Write engaging, well-styled content with proper Markdown formatting."},
                     {"role": "user", "content": content_prompt}
@@ -521,7 +527,7 @@ Return as JSON with keys: meta_title, meta_description, focus_keyphrase, seo_tit
         try:
             response = await asyncio.to_thread(
                 self.client.chat.completions.create,
-                model="Qwen/Qwen3-Next-80B-A3B-Instruct:novita",
+                model="Qwen/Qwen3-Next-80B-A3B-Instruct",
                 messages=[
                     {"role": "system", "content": "You are an SEO metadata expert. Return only valid JSON."},
                     {"role": "user", "content": meta_prompt}

@@ -4,10 +4,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+print(os.getenv("HF_TOKEN"))
+
 client = OpenAI(
     base_url="https://router.huggingface.co/v1",
     api_key=os.getenv("HF_TOKEN"),
-    default_headers={"x-hf-bill-to": "Delemon"}
+    default_headers={"x-hf-bill-to": os.getenv("ORG_NAME")},
 )
 
 completion = client.chat.completions.create(
