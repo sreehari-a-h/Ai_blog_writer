@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = 'seo-blog-generator-secret-key-2024'
 
 # Configuration
-API_BASE_URL = "http://localhost:8000"  # Your FastAPI server
+API_BASE_URL = "http://127.0.0.1:8000"  # Your FastAPI server
 UPLOAD_FOLDER = 'generated_blogs'
 
 # Ensure upload directory exists
@@ -846,9 +846,9 @@ if __name__ == '__main__':
     print("2. Install Flask dependencies:")
     print("   pip install flask requests markdown")
     print("\n🌐 Endpoints:")
-    print("  - Main UI: http://localhost:5000")
-    print("  - API Status: http://localhost:5000/api-status")
-    print("  - Preview: http://localhost:5000/preview/<filename>")
+    print("  - Main UI: http://127.0.0.1:5000")
+    print("  - API Status: http://127.0.0.1:5000/api-status")
+    print("  - Preview: http://127.0.0.1:5000/preview/<filename>")
     print("\n🔧 Features:")
     print("  - ✅ Form-based blog generation")
     print("  - ✅ Real-time API status monitoring")
@@ -872,7 +872,7 @@ if __name__ == '__main__':
     print("  - Markdown to HTML conversion for preview")
     
     print("\n" + "=" * 50)
-    print("🎯 Starting Flask UI on http://localhost:5000")
-    print("📡 Expecting FastAPI backend on http://localhost:8000")
-    
+    print("🎯 Starting Flask UI on http://127.0.0.1:5000")
+    print("📡 Expecting FastAPI backend on http://127.0.0.1:8000")
+
     app.run(host='0.0.0.0', port=5000, debug=True)
