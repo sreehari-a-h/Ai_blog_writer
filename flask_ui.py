@@ -73,6 +73,8 @@ def index():
     """Main dashboard"""
     return render_template('index.html', sample_data=SAMPLE_DATA)
 
+seo_score = 0  # Global variable to hold SEO score for preview
+
 @app.route('/generate', methods=['POST'])
 def generate_blog():
     """Generate blog via FastAPI"""
@@ -122,7 +124,10 @@ def generate_blog():
             json=blog_request,
             timeout=120  # 2 minute timeout for AI generation
         )
-        
+
+        seo_score = (response.json().get('seo_guarantee', {}).get('achieved_score') or
+             response.json().get('blog_data', {}).get('final_seo_score') or 0)
+
         if response.status_code == 200:
             result = response.json()
             
@@ -193,6 +198,7 @@ def preview_blog(filename):
         return render_template('preview.html', 
                              blog_data=data['blog_data'],
                              html_content=Markup(html_content),
+                             seo_score=seo_score,
                              analysis=data.get('content_analysis', {}),
                              filename=filename)
         
@@ -218,7 +224,7 @@ def download_blog(filename):
 SEO BLOG POST - COPY-READY FORMAT
 Generated: {data['blog_data'].get('generated_at', '')}
 Word Count: {data['blog_data'].get('word_count', 0)}
-SEO Score: {data.get('content_analysis', {}).get('seo_score', {}).get('overall_score', 0)}/100
+SEO Score: {data.get('seo_guarantee', {}).get('achieved_score') or data.get('blog_data', {}).get('final_seo_score', 0)}/100
 
 STYLING PRESERVED:
 - **Bold text** 
@@ -631,7 +637,7 @@ def create_templates():
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
-                            <h5>${data.analysis.seo_score.overall_score}/100</h5>
+                            <h5>${data.seo_guarantee?.achieved_score || data.blog_data?.final_seo_score || 0}/100</h5>
                             <small>SEO Score</small>
                         </div>
                     </div>
@@ -742,7 +748,7 @@ def create_templates():
                                 <small>Words</small>
                             </div>
                             <div class="col-6">
-                                <h3>{{ analysis.seo_score.overall_score }}/100</h3>
+                                <h3>{{ blog_data.final_seo_score | default(0) }}/100</h3>
                                 <small>SEO Score</small>
                             </div>
                         </div>

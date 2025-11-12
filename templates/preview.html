@@ -47,7 +47,7 @@
                                 <small>Words</small>
                             </div>
                             <div class="col-6">
-                                <h3>{{ analysis.seo_score.overall_score }}/100</h3>
+                                <h3>{{ blog_data.final_seo_score | default(0) }}/100</h3>
                                 <small>SEO Score</small>
                             </div>
                         </div>

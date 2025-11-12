@@ -344,7 +344,7 @@
                 <div class="col-md-3">
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
-                            <h5>${data.analysis.seo_score.overall_score}/100</h5>
+                            <h5>${data.seo_guarantee?.achieved_score || data.blog_data?.final_seo_score || 0}/100</h5>
                             <small>SEO Score</small>
                         </div>
                     </div>
