@@ -184,6 +184,54 @@ def load_sample(sample_key):
     else:
         return jsonify({'error': 'Sample not found'}), 404
 
+@app.route('/history')
+def blog_history():
+    """View all generated blogs"""
+    try:
+        blogs = []
+        
+        if os.path.exists(UPLOAD_FOLDER):
+            for filename in os.listdir(UPLOAD_FOLDER):
+                if filename.endswith('.json'):
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    try:
+                        with open(filepath, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                        
+                        blog_info = {
+                            'filename': filename,
+                            'topic': data.get('blog_data', {}).get('metadata', {}).get('meta_title', 'Untitled'),
+                            'word_count': data.get('blog_data', {}).get('word_count', 0),
+                            'seo_score': (data.get('seo_guarantee', {}).get('achieved_score') or 
+                                        data.get('blog_data', {}).get('final_seo_score', 0)),
+                            'generated_at': data.get('blog_data', {}).get('generated_at', ''),
+                            'primary_keywords': data.get('blog_data', {}).get('metadata', {}).get('focus_keyphrase', 'N/A')
+                        }
+                        blogs.append(blog_info)
+                    except Exception as e:
+                        print(f"Error reading {filename}: {e}")
+                        continue
+        
+        blogs.sort(key=lambda x: x['generated_at'], reverse=True)
+        return render_template('history.html', blogs=blogs, total_count=len(blogs))
+        
+    except Exception as e:
+        flash(f'Error loading blog history: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/delete/<filename>', methods=['POST'])
+def delete_blog(filename):
+    """Delete a generated blog"""
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            return jsonify({'success': True, 'message': 'Blog deleted successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'File not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/preview/<filename>')
 def preview_blog(filename):
     """Preview generated blog"""
@@ -318,6 +366,11 @@ def create_templates():
             <div class="col-12 text-center">
                 <h1><i class="fas fa-blog"></i> Enhanced SEO Blog Generator</h1>
                 <p class="mb-0">Generate dynamic, styled blogs with AI-powered content structure</p>
+            </div>
+            <div>
+                <a href="/history" class="btn btn-light">
+                    <i class="fas fa-history"></i> View History
+                </a>
             </div>
         </div>
 
@@ -837,11 +890,170 @@ def create_templates():
 </body>
 </html>'''
 
+    history_template = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog History - SEO Blog Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .blog-card { transition: transform 0.2s; cursor: pointer; }
+        .blog-card:hover { transform: translateY(-5px); }
+        .seo-badge-high { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .seo-badge-medium { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .seo-badge-low { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row gradient-bg text-white py-4 mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1><i class="fas fa-history"></i> Blog History</h1>
+                        <p class="mb-0">View and manage all generated blogs</p>
+                    </div>
+                    <div>
+                        <a href="/" class="btn btn-light">
+                            <i class="fas fa-plus"></i> Generate New Blog
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card card-shadow text-center">
+                        <div class="card-body">
+                            <h3 class="text-primary">{{ total_count }}</h3>
+                            <p class="mb-0">Total Blogs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-shadow text-center">
+                        <div class="card-body">
+                            <h3 class="text-success">{{ blogs|selectattr('seo_score', 'ge', 90)|list|length }}</h3>
+                            <p class="mb-0">90+ SEO Score</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-shadow text-center">
+                        <div class="card-body">
+                            <h3 class="text-info">{{ (blogs|sum(attribute='word_count'))|round|int }}</h3>
+                            <p class="mb-0">Total Words</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-shadow text-center">
+                        <div class="card-body">
+                            <h3 class="text-warning">{{ blogs|length }}</h3>
+                            <p class="mb-0">This Session</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blog List -->
+            <div class="row">
+                {% if blogs %}
+                    {% for blog in blogs %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card blog-card card-shadow h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center {% if blog.seo_score >= 90 %}seo-badge-high{% elif blog.seo_score >= 75 %}seo-badge-medium{% else %}seo-badge-low{% endif %} text-white">
+                                <span class="badge bg-light text-dark">SEO: {{ blog.seo_score }}/100</span>
+                                <span class="badge bg-dark">{{ blog.word_count }} words</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ blog.topic[:60] }}{% if blog.topic|length > 60 %}...{% endif %}</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-key"></i> {{ blog.primary_keywords }}
+                                    </small>
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i> {{ blog.generated_at[:10] }} {{ blog.generated_at[11:19] }}
+                                    </small>
+                                </p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="/preview/{{ blog.filename }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="/download/{{ blog.filename }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    <button onclick="deleteBlog('{{ blog.filename }}')" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <div class="card card-shadow text-center py-5">
+                            <div class="card-body">
+                                <i class="fas fa-folder-open fa-5x text-muted mb-3"></i>
+                                <h3>No Blogs Generated Yet</h3>
+                                <p class="text-muted">Start creating your first SEO-optimized blog post!</p>
+                                <a href="/" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus"></i> Generate Your First Blog
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function deleteBlog(filename) {
+            if (confirm('Are you sure you want to delete this blog?')) {
+                fetch(`/delete/${filename}`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Blog deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting blog: ' + error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>'''
+
     with open(os.path.join(templates_dir, 'index.html'), 'w', encoding='utf-8') as f:
         f.write(index_template)
     
     with open(os.path.join(templates_dir, 'preview.html'), 'w', encoding='utf-8') as f:
         f.write(preview_template)
+
+    with open(os.path.join(templates_dir, 'history.html'), 'w', encoding='utf-8') as f:
+        f.write(history_template)
 
 if __name__ == '__main__':
     create_templates()
